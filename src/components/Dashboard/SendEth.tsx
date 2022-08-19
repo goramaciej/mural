@@ -1,13 +1,19 @@
 import { ReactElement, memo } from 'react';
-import { FormControlProps, FormControl } from '@mui/material';
+// import { FormControlProps, FormControl } from '@mui/material';
 import * as yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { useForm, Controller, SubmitHandler } from 'react-hook-form';
-import { TextField, Button, InputAdornment } from '@mui/material';
+import { Button, InputAdornment } from '@mui/material';
 
 import { SendEthForm, StyledTextField } from './Dashboard.styles';
 
-interface IFormInput {
+const parseValue = (value: string) =>
+  value
+    .replace(/^\./g, '0.')
+    .replace(/[^0-9.]/g, '')
+    .replace(/(\..*)\./g, '$1');
+
+export interface IPayRequest {
     address: string;
     amount: string;
 }
@@ -17,18 +23,22 @@ const schema = yup.object({
     amount: yup.string().required(),
 });
 
-const SendEth = (): ReactElement => {
+type ThisProps = {
+    sendPayRequest: (obj: IPayRequest) => void;
+};
+
+const SendEth = ({ sendPayRequest }: ThisProps): ReactElement => {
     const {
         control,
         handleSubmit,
         formState: { errors, touchedFields, isValid },
-    } = useForm<IFormInput>({
+    } = useForm<IPayRequest>({
         mode: 'onChange',
         resolver: yupResolver(schema),
     });
 
-    const onSubmit: SubmitHandler<IFormInput> = (data) => {
-        console.log(data);
+    const onSubmit: SubmitHandler<IPayRequest> = (data) => {
+        sendPayRequest(data);
     };
 
     return (
@@ -56,16 +66,15 @@ const SendEth = (): ReactElement => {
                         label={field.name}
                         InputProps={{
                             endAdornment: (
-                                <InputAdornment position="end"
-                                
-                                >
+                                <InputAdornment position="end">
                                     ETH
                                 </InputAdornment>
                             ),
                         }}
                         {...field}
-                    />
-                )}
+                        value={parseValue(field.value)}
+                    />)
+                }
             />
             <Button
                 color="info"
@@ -73,7 +82,7 @@ const SendEth = (): ReactElement => {
                 type="submit"
                 disabled={!isValid}
             >
-                Make transaction
+                Send
             </Button>
         </SendEthForm>
     );

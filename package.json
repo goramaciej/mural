@@ -5,6 +5,8 @@
   "dependencies": {
     "@emotion/react": "^11.10.0",
     "@emotion/styled": "^11.10.0",
+    "@gnosis.pm/safe-apps-react-sdk": "^4.6.0",
+    "@gnosis.pm/safe-apps-web3-react": "^1.5.0",
     "@hookform/resolvers": "^2.9.7",
     "@metamask/providers": "^9.1.0",
     "@mui/icons-material": "^5.8.4",

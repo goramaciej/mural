@@ -19,6 +19,12 @@ export const defaultTheme = createTheme({
                 h1: {
                     fontSize: 24,
                 },
+                h3: {
+                    marginTop: 35,
+                    marginBottom: 0,
+                    borderTop: '1px solid #ffffff69',
+                    paddingTop: 15,
+                },
             },
         },
         MuiButton: {
@@ -28,6 +34,7 @@ export const defaultTheme = createTheme({
                     color: '#FFFFFF',
                     padding: '8px 40px',
                     borderRadius: '10px',
+                    margin: '20px 0',
                 },
             },
         },
@@ -49,7 +56,7 @@ export const defaultTheme = createTheme({
             styleOverrides: {
                 root: {
                     '>.MuiTypography-root': {
-                        color: 'white',
+                        color: 'rgb(0, 200, 255)',
                         fontWeight: '600',
                     },
                 },

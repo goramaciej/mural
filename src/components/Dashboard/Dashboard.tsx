@@ -2,17 +2,24 @@ import { ReactElement, useState, useCallback, useEffect } from 'react';
 import { ethers } from 'ethers';
 import { formatEther, parseEther } from 'ethers/lib/utils';
 import { Box, Button } from '@mui/material';
+import { useSafeAppsSDK } from '@gnosis.pm/safe-apps-react-sdk';
 
-import { DashboardBox, DataBox, HistoryBox } from './Dashboard.styles';
+import { DashboardBox, DataBox, HistoryBox, ErrorMsg, SuccessMsg } from './Dashboard.styles';
 
 import SendEth from './SendEth';
 
+import { IPayRequest } from './SendEth';
+
 export const Dashboard = (): ReactElement => {
+    // STATE
     const [userLoggedIn, setUserLoggedIn] = useState<boolean>(false);
 
-    const [globalError, setGlobalError] = useState<string | null>(null);
+    const [globalError, setGlobalError] = useState<string | null>();
+    const [globalSuccess, setGlobalSuccess] = useState<string | null>();
 
-    const [signer, setSigner] = useState<ethers.providers.JsonRpcSigner | null>(null);
+    const [signer, setSigner] = useState<ethers.providers.JsonRpcSigner | null>(
+        null
+    );
 
     const [userAddress, setUserAddress] = useState<string | null>(null);
     const [userBalance, setUserBalance] = useState<string | null>(null);
@@ -20,6 +27,7 @@ export const Dashboard = (): ReactElement => {
         ethers.providers.TransactionResponse[]
     >([]);
 
+    // CALLBACKS
     const fetchData = useCallback(async () => {
         try {
             const provider = new ethers.providers.Web3Provider(window.ethereum);
@@ -29,6 +37,7 @@ export const Dashboard = (): ReactElement => {
 
             const signer = provider.getSigner();
             setSigner(signer);
+
             const userAddress = await signer.getAddress();
             setUserAddress(userAddress);
 
@@ -39,20 +48,57 @@ export const Dashboard = (): ReactElement => {
             let history = await newProvider.getHistory(userAddress);
             console.log(history);
             setUserHistory(history);
-
-            // const wallet = await ethers.Wallet.createRandom();
-            // console.log('address:', wallet.address);
-            // console.log('mnemonic:', wallet.mnemonic.phrase);
-            // console.log('privateKey:', wallet.privateKey);
         } catch (err) {
-            setGlobalError("No metamask extension found, please install it.")
+            setGlobalError('No metamask extension found, please install it.');
         }
     }, []);
+
+    const sendPayRequest = useCallback(
+        async (obj: IPayRequest) => {
+            setGlobalError(null);
+            setGlobalSuccess(null);
+            if (Number(obj.amount) > Number(userBalance)) {
+                return setGlobalError(
+                    `The ammount is bigger than your balance, please pass amount smaller than ${userBalance}`
+                );
+            }
+            if (signer) {
+                try {
+                    const tx = await signer.sendTransaction({
+                        to: obj.address,
+                        value: parseEther(obj.amount),
+                    });
+                    setGlobalSuccess(
+                        'Please confirm operation in metamask browser extension.'
+                    );
+                } catch (err: any) {
+                    if (err.code === 'INVALID_ARGUMENT') {
+                        return setGlobalError(
+                            'Invalid address, please enter valid address'
+                        );
+                    }
+
+                    setGlobalError(
+                        'Something went wrong, please try again later'
+                    );
+                }
+            }
+        },
+        [userBalance, signer]
+    );
+
+    // HOOKS
+    const { sdk, connected, safe } = useSafeAppsSDK();
+
+    useEffect(() => {
+        console.log('all: ', sdk);
+        console.log('connected: ', connected);
+        console.log('safe: ', safe);
+    }, [sdk]);
 
     return (
         <DashboardBox>
             <h1>Dashboard</h1>
-
             {userLoggedIn ? (
                 <>
                     <Box>
@@ -64,9 +110,10 @@ export const Dashboard = (): ReactElement => {
                         </DataBox>
                     </Box>
 
+                    <h3>Transaction history:</h3>
                     <HistoryBox>
                         {userHistory.length < 1
-                            ? 'No transactions in history'
+                            ? 'No transactions in history yet'
                             : userHistory.map(
                                   (
                                       item: ethers.providers.TransactionResponse
@@ -86,7 +133,7 @@ export const Dashboard = (): ReactElement => {
                               )}
                     </HistoryBox>
 
-                    <SendEth />
+                    <SendEth sendPayRequest={sendPayRequest} />
                 </>
             ) : (
                 <Button
@@ -97,10 +144,14 @@ export const Dashboard = (): ReactElement => {
                     Login to metamask
                 </Button>
             )}
-            { globalError && globalError.length > 0 && (
-                <div style={{color: '#e60000', fontWeight: '600', marginTop: '10px', fontSize: '16px'}}>{globalError}</div>
+            {globalError && globalError.length > 0 && (
+                <ErrorMsg>
+                    {globalError}
+                </ErrorMsg>
             )}
-            
+            {globalSuccess && globalSuccess.length > 0 && (
+                <SuccessMsg>{globalSuccess}</SuccessMsg>
+            )}
         </DashboardBox>
     );
 };
