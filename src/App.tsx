@@ -1,26 +1,18 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import { ReactElement } from 'react';
+import CssBaseline from "@mui/material/CssBaseline";
+import { ThemeProvider } from '@mui/material/styles';
+import { defaultTheme } from 'theme/defaultTheme';
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+// import WalletElement from 'components/WalletElement/WalletElement';
+import { Dashboard } from 'components/Dashboard';
+
+function App(): ReactElement {
+    return (
+        <ThemeProvider theme={defaultTheme}>
+            <CssBaseline />
+            <Dashboard />
+        </ThemeProvider>
+    );
 }
 
 export default App;
